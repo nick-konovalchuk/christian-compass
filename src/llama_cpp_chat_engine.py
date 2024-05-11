@@ -1,17 +1,15 @@
 from llama_cpp import Llama
 from llama_cpp.llama_chat_format import Jinja2ChatFormatter
 
-from src.chat_engine.chat_engine import ChatEngine
 from src.const import SYSTEM_PROMPT
 
 
-class LlamaCPPChatEngine(ChatEngine):
+class LlamaCPPChatEngine:
     def __init__(self, model_path):
         self._model = Llama(
             model_path=model_path,
-            n_ctx=4096,
-            n_threads=8,
-            verbose=False
+            n_ctx=0,
+            verbose=False,
         )
         self.n_ctx = self._model.context_params.n_ctx
         self._eos_token = self._model._model.token_get_text(
@@ -34,18 +32,18 @@ class LlamaCPPChatEngine(ChatEngine):
         else:
             user_message_extended = user_message
         messages = (
-            [
-                {
-                    "role": "system",
-                    "context": SYSTEM_PROMPT
-                }
-            ] + messages + [
-            {
-                "role": "user",
-                "content": user_message_extended,
+                [
+                    {
+                        "role": "system",
+                        "content": SYSTEM_PROMPT
+                    }
+                ] + messages + [
+                    {
+                        "role": "user",
+                        "content": user_message_extended,
 
-            }
-        ]
+                    }
+                ]
         )
         prompt = self._formatter(messages=messages).prompt
         tokens = self._tokenizer.encode(prompt, add_bos=False)
@@ -54,9 +52,8 @@ class LlamaCPPChatEngine(ChatEngine):
             tokens,
             stop=self._eos_token,
             max_tokens=self.n_ctx - n_tokens,
-            # max_tokens=self.n_ctx,
-            # max_tokens=None,
-            stream=True
+            stream=True,
+            temperature=0
         )
 
         return response_generator, n_tokens

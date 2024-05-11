@@ -3,12 +3,13 @@ import os
 import weaviate
 from sentence_transformers import SentenceTransformer, CrossEncoder
 
-from src.chat_engine.llama_cpp_chat_engine import LlamaCPPChatEngine
+from src.llama_cpp_chat_engine import LlamaCPPChatEngine
 
 
 class ChatRagAgent:
     def __init__(self):
-        self._chat_engine = LlamaCPPChatEngine("Phi-3-mini-4k-instruct-q4.gguf")
+        # self._chat_engine = LlamaCPPChatEngine("Phi-3-mini-4k-instruct-q4.gguf")
+        self._chat_engine = LlamaCPPChatEngine("Hermes-2-Pro-Llama-3-8B-Q4_K_M.gguf")
         self.n_ctx = self._chat_engine.n_ctx
         self._vectorizer = SentenceTransformer(
             "jinaai/jina-embeddings-v2-base-en",
