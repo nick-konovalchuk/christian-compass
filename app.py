@@ -1,12 +1,25 @@
-import streamlit as st
+import warnings
 
-from src.chat_engine.llama_cpp_chat_engine import LlamaCPPChatEngine
+import streamlit as st
+from dotenv import load_dotenv
+
+from src.chat_rag_agent import ChatRagAgent
 from src.utils import render_chat_history, get_render_assistant_message
+
+warnings.filterwarnings("ignore")
+
+load_dotenv()
+
+st.set_page_config(
+    page_icon="images/logo2.png",
+    initial_sidebar_state="collapsed"
+
+)
 
 
 @st.cache_resource(show_spinner=False)
 def get_chat_rag_agent():
-    return LlamaCPPChatEngine("Phi-3-mini-4k-instruct-q4.gguf")
+    return ChatRagAgent()
 
 
 def calc_progress_perc():
@@ -17,19 +30,22 @@ def pbar_callback():
     pbar.progress(calc_progress_perc(), "Chat history limit")
 
 
-chat_rag_agent = get_chat_rag_agent()
+with st.spinner("Engine loading"):
+    chat_rag_agent = get_chat_rag_agent()
 
 if "messages" not in st.session_state or st.sidebar.button("Clear chat history"):
     st.session_state["input_blocked"] = False
     st.session_state["messages"] = []
     st.session_state["ctx_len"] = 0
+    st.title("Christian compass")
+    st.markdown("What theological questions you have?")
 
 pbar = st.sidebar.progress(calc_progress_perc(), "Chat history limit")
 
 user_message = st.chat_input(disabled=st.session_state["input_blocked"])
 if user_message:
     if not st.session_state["input_blocked"]:
-        message_generator, n_tokens = chat_rag_agent.chat(
+        (message_generator, n_tokens), sources = chat_rag_agent.chat(
             st.session_state["messages"],
             user_message
         )
@@ -43,8 +59,7 @@ if user_message:
     render_chat_history()
     if not st.session_state["input_blocked"]:
         pbar_callback()
-        message, finish_reason = get_render_assistant_message(message_generator, pbar_callback)
-        st.caption("AI can make mistakes. Please, fact check the info")
+        message = get_render_assistant_message(message_generator, sources, pbar_callback)
         st.session_state["messages"].append(
             {
                 "role": "assistant",
