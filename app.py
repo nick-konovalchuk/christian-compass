@@ -44,6 +44,7 @@ if user_message:
     if not st.session_state["input_blocked"]:
         pbar_callback()
         message, finish_reason = get_render_assistant_message(message_generator, pbar_callback)
+        st.caption("AI can make mistakes. Please, fact check the info")
         st.session_state["messages"].append(
             {
                 "role": "assistant",
