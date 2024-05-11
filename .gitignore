@@ -162,3 +162,4 @@ cython_debug/
 .huggingface
 .ipynb_checkpoints
 *.ipynb
+*.json

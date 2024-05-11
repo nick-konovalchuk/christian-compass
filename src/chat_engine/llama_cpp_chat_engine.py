@@ -8,11 +8,11 @@ class LlamaCPPChatEngine(ChatEngine):
     def __init__(self, model_path):
         self._model = Llama(
             model_path=model_path,
-            n_ctx=0,
+            n_ctx=30,
             n_threads=8,
             verbose=False
         )
-        self.n_ctx = self._model.n_ctx()
+        self.n_ctx = self._model.context_params.n_ctx
         self._eos_token = self._model._model.token_get_text(
             int(self._model.metadata['tokenizer.ggml.eos_token_id'])
         )
@@ -27,14 +27,24 @@ class LlamaCPPChatEngine(ChatEngine):
 
         self._tokenizer = self._model.tokenizer()
 
-    def chat(self, messages, context):
+    def chat(self, messages, user_message):
+        messages = messages + [
+            {
+                "role": "user",
+                "content": user_message,
+
+            }
+        ]
         prompt = self._formatter(messages=messages).prompt
         tokens = self._tokenizer.encode(prompt, add_bos=False)
+        n_tokens = len(tokens)
         response_generator = self._model.create_completion(
             tokens,
             stop=self._eos_token,
-            max_tokens=None,
+            max_tokens=self.n_ctx - n_tokens,
+            # max_tokens=self.n_ctx,
+            # max_tokens=None,
             stream=True
         )
-        # next(response_generator)  # first generated token is role
-        return response_generator, len(tokens)
+
+        return response_generator, n_tokens
