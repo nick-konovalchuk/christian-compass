@@ -9,7 +9,7 @@ class LlamaCPPChatEngine(ChatEngine):
         self._model = Llama(
             model_path=model_path,
             n_ctx=30,
-            n_threads=8,
+            n_threads=1,
             verbose=False
         )
         self.n_ctx = self._model.context_params.n_ctx
@@ -27,14 +27,7 @@ class LlamaCPPChatEngine(ChatEngine):
 
         self._tokenizer = self._model.tokenizer()
 
-    def chat(self, messages, user_message):
-        messages = messages + [
-            {
-                "role": "user",
-                "content": user_message,
-
-            }
-        ]
+    def chat(self, messages):
         prompt = self._formatter(messages=messages).prompt
         tokens = self._tokenizer.encode(prompt, add_bos=False)
         n_tokens = len(tokens)
@@ -42,8 +35,6 @@ class LlamaCPPChatEngine(ChatEngine):
             tokens,
             stop=self._eos_token,
             max_tokens=self.n_ctx - n_tokens,
-            # max_tokens=self.n_ctx,
-            # max_tokens=None,
             stream=True
         )
 

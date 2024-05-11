@@ -1,5 +1,4 @@
 CHAT_AVATARS = {
     "user": '👤',
-    # "assistant": '🧭'
-    "assistant": '🧭'
+    "assistant": "images/logo2.png"
 }

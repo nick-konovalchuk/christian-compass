@@ -23,17 +23,10 @@ if "messages" not in st.session_state or st.sidebar.button("Clear chat history")
 pbar = st.sidebar.progress(
     min(st.session_state["ctx_len"] / chat_rag_agent.n_ctx, 1), "Chat history limit"
 )
+if st.session_state["messages"]:
+    message_generator, n_tokens = chat_rag_agent.chat(st.session_state["messages"])
+    st.session_state["ctx_len"] = n_tokens
 
-user_message = st.chat_input(disabled=st.session_state["input_blocked"])
-if user_message:
-    message_generator, n_tokens = chat_rag_agent.chat(st.session_state["messages"], user_message)
-    st.session_state["ctx_len"] += n_tokens
-    st.session_state["messages"].append(
-        {
-            "role": "user",
-            "content": user_message
-        }
-    )
     render_chat_history()
     pbar_callback()
 
@@ -44,8 +37,16 @@ if user_message:
             "content": message
         }
     )
+
 if st.session_state["ctx_len"] >= chat_rag_agent.n_ctx:
     st.session_state["input_blocked"] = True
-    user_message = st.chat_input(disabled=st.session_state["input_blocked"])
     st.info("Chat history limit reached")
 
+user_message = st.chat_input(disabled=st.session_state["input_blocked"])
+if user_message:
+    st.session_state["messages"].append(
+        {
+            "role": "user",
+            "content": user_message
+        }
+    )
